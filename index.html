@@ -143,6 +143,52 @@
     var myUsername = "";
     var activeChatPartner = "";
 
+    // Zvukový signál Messenger cinknutia
+    function playMessengerChime() {
+      try {
+        var AudioCtx = window.AudioContext || window.webkitAudioContext;
+        var ctx = new AudioCtx();
+        var osc = ctx.createOscillator();
+        var gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        var now = ctx.currentTime;
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.setValueAtTime(880, now + 0.08);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+        osc.start(now);
+        osc.stop(now + 0.35);
+      } catch (e) {}
+    }
+
+    // Povolenie notifikácií
+    function requestNotificationPermission() {
+      if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+    }
+
+    // Vyskakovacia notifikácia (aj keď je aplikácia minimalizovaná)
+    function showSystemNotification(sender, text) {
+      // Zavibruje mobil (ak to podporuje)
+      if (navigator.vibrate) {
+        navigator.vibrate([150, 100, 150]);
+      }
+
+      if ("Notification" in window && Notification.permission === "granted") {
+        var notif = new Notification("⚡ 1337: " + sender, {
+          body: text,
+          icon: "https://cdn-icons-png.flaticon.com/512/1041/1041916.png",
+          tag: "msg-" + sender
+        });
+        notif.onclick = function() {
+          window.focus();
+          openChat(sender);
+        };
+      }
+    }
+
     function showStatus(text, isError) {
       var el = document.getElementById('status-msg');
       el.style.color = isError ? '#ff4757' : '#00ffa3';
@@ -160,11 +206,31 @@
     socket.on('auth_error', function(msg) { showStatus(msg, true); });
     socket.on('auth_success', function(data) { showStatus(data.message, false); });
 
+    // Úspešné prihlásenie -> Uložíme do pamäte telefónu (localStorage)
     socket.on('login_success', function(data) {
       myUsername = data.username;
+      var pass = document.getElementById('auth-pass').value.trim();
+      if (pass) {
+        localStorage.setItem('1337_session', JSON.stringify({ username: myUsername, password: pass }));
+      }
       document.getElementById('current-user-display').innerText = myUsername;
       document.getElementById('auth-screen').style.display = 'none';
       document.getElementById('main-screen').style.display = 'flex';
+      requestNotificationPermission();
+    });
+
+    // Automatické prihlásenie pri každom zapnutí aplikácie
+    socket.on('connect', function() {
+      var saved = localStorage.getItem('1337_session');
+      if (saved) {
+        try {
+          var creds = JSON.parse(saved);
+          if (creds.username && creds.password) {
+            showStatus("Automatické prihlasovanie (" + creds.username + ")...", false);
+            socket.emit('login', { username: creds.username, password: creds.password });
+          }
+        } catch (e) {}
+      }
     });
 
     socket.on('alert', function(msg) { alert(msg); });
@@ -222,6 +288,7 @@
       document.getElementById('chat-screen').style.display = 'flex';
       document.getElementById('chat-messages').innerHTML = "";
       socket.emit('load_messages', partner);
+      document.title = "⚡ 1337 Chat";
     }
 
     function closeChat() {
@@ -249,6 +316,12 @@
     });
 
     socket.on('new_message', function(msg) {
+      if (msg.from !== myUsername) {
+        playMessengerChime(); // Zvuk
+        showSystemNotification(msg.from, msg.text); // Notifikácia + vibrácia
+        document.title = "🔔 Nová správa! - 1337";
+      }
+
       if (activeChatPartner && (msg.from === activeChatPartner || (msg.from === myUsername && msg.to === activeChatPartner))) {
         appendMessage(msg);
       }
@@ -280,7 +353,11 @@
       }
     }
 
-    function logout() { location.reload(); }
+    // Odhlásenie: Zmaže pamäť a odhlási používateľa
+    function logout() { 
+      localStorage.removeItem('1337_session');
+      location.reload(); 
+    }
   </script>
 </body>
 </html>
