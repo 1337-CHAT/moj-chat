@@ -27,7 +27,17 @@ function saveDB(data) {
   fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 }
 
+// Zverejníme hlavný priečinok aj priečinok public
+app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+  const file1 = path.join(__dirname, 'index.html');
+  const file2 = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(file1)) return res.sendFile(file1);
+  if (fs.existsSync(file2)) return res.sendFile(file2);
+  res.send("Hľadá sa index.html...");
+});
 
 io.on('connection', (socket) => {
   let currentUser = null;
@@ -149,6 +159,7 @@ function sendUserData(socket, username) {
   socket.emit('user_data', { friends: myFriends, requests: incomingRequests });
 }
 
-server.listen(3000, () => {
-  console.log("1337 Server bezi na: http://localhost:3000");
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log("1337 Server bezi na porte: " + PORT);
 });
