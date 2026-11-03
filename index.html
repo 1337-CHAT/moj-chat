@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>⚡ 1337 Chat</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    html, body { width: 100%; height: 100%; background: #0b0e14; color: #e1e7ec; overflow-x: hidden; }
+    
+    #app { width: 100%; min-height: 100vh; max-width: 480px; margin: 0 auto; background: #151921; display: flex; flex-direction: column; }
+    
+    /* Hlavička */
+    .header { background: #1c222d; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #273142; }
+    .header h1 { font-size: 1.2rem; color: #00ffa3; font-weight: 800; letter-spacing: 2px; }
+    .header .btn-small { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+
+    /* Uvítacia Obrazovka */
+    #auth-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 20px; gap: 15px; }
+    
+    .greeting-card {
+      background: #1c222d; border: 1px solid #273142; border-radius: 12px; padding: 22px 15px; text-align: center;
+      box-shadow: 0 4px 20px rgba(0, 255, 163, 0.08);
+    }
+    .greet-q { font-size: 1.15rem; color: #8e9cae; margin-bottom: 6px; font-style: italic; }
+    .greet-a { font-size: 1.4rem; color: #ffffff; font-weight: bold; margin-bottom: 8px; }
+    .greet-sign { font-size: 1.1rem; color: #00ffa3; font-weight: 600; margin-bottom: 15px; }
+    .leet-logo {
+      font-family: monospace; font-size: 1.8rem; font-weight: 900; letter-spacing: 14px; color: #00ffa3;
+      text-shadow: 0 0 15px rgba(0, 255, 163, 0.6); margin-top: 5px;
+    }
+
+    .auth-box { display: flex; flex-direction: column; gap: 12px; margin-top: 5px; }
+    .auth-box input { padding: 14px; background: #202736; border: 1px solid #2f3b52; border-radius: 8px; color: white; font-size: 1rem; outline: none; }
+    .auth-box button { padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; }
+    .btn-green { background: #00ffa3; color: #0b0e14; }
+    .btn-secondary { background: #273142; color: #e1e7ec; }
+    #status-msg { text-align: center; font-size: 0.95rem; min-height: 22px; font-weight: bold; }
+
+    /* Hlavná obrazovka */
+    #main-screen { flex: 1; display: none; flex-direction: column; height: 100vh; }
+    .tabs { display: flex; background: #1c222d; border-bottom: 1px solid #273142; }
+    .tab { flex: 1; text-align: center; padding: 14px 5px; cursor: pointer; font-size: 0.9rem; color: #8e9cae; border-bottom: 2px solid transparent; }
+    .tab.active { color: #00ffa3; border-color: #00ffa3; font-weight: bold; }
+
+    .tab-content { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+    .list-item { background: #1c222d; padding: 14px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .btn-action { padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .btn-accept { background: #00ffa3; color: #0b0e14; margin-right: 5px; }
+    .btn-reject { background: #ff4757; color: white; }
+
+    /* Súkromný Chat */
+    #chat-screen { flex: 1; display: none; flex-direction: column; height: 100vh; }
+    .chat-header { background: #1c222d; padding: 14px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #273142; }
+    .chat-header button { background: none; border: none; color: #00ffa3; font-size: 1.4rem; cursor: pointer; padding: 5px; }
+    .chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .msg-bubble { max-width: 80%; padding: 10px 14px; border-radius: 8px; font-size: 0.95rem; line-height: 1.3; }
+    .msg-bubble.mine { align-self: flex-end; background: #00ffa3; color: #0b0e14; border-bottom-right-radius: 2px; }
+    .msg-bubble.theirs { align-self: flex-start; background: #242c3b; color: white; border-bottom-left-radius: 2px; }
+    .msg-time { font-size: 0.7rem; opacity: 0.7; margin-top: 3px; text-align: right; }
+    
+    .chat-form { display: flex; padding: 12px; background: #1c222d; gap: 8px; }
+    .chat-form input { flex: 1; padding: 12px; background: #242c3b; border: 1px solid #2f3b52; border-radius: 8px; color: white; outline: none; }
+    .chat-form button { padding: 0 18px; background: #00ffa3; border: none; border-radius: 8px; font-weight: bold; color: #0b0e14; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div id="app">
+    <!-- 1. OBRAZOVKA: UVÍTANIE & PRIHLÁSENIE -->
+    <div id="auth-screen">
+      <div class="greeting-card">
+        <div class="greet-q">Tu som správne?</div>
+        <div class="greet-a">Vieš dobre, kamoško!</div>
+        <div class="greet-sign">S pozdravom Ďuri'</div>
+        <div class="leet-logo">I &nbsp; E &nbsp; E &nbsp; 7</div>
+      </div>
+      
+      <div class="auth-box">
+        <div id="status-msg"></div>
+        <input id="auth-user" placeholder="Používateľské meno" value="Juraj" />
+        <input id="auth-pass" type="password" placeholder="Heslo" value="1234" />
+        <button class="btn-green" onclick="handleAuth('login')">Prihlásiť sa</button>
+        <button class="btn-secondary" onclick="handleAuth('register')">Vytvoriť nový účet</button>
+      </div>
+    </div>
+
+    <!-- 2. HLAVNÁ OBRAZOVKA -->
+    <div id="main-screen">
+      <div class="header">
+        <h1>⚡ 1337</h1>
+        <div>
+          <span id="current-user-display" style="font-weight: bold; margin-right: 8px;">Juraj</span>
+          <button class="btn-small" onclick="logout()">Odhlásiť</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('friends')">Priatelia</div>
+        <div class="tab" onclick="switchTab('requests')">Žiadosti (<span id="req-count">0</span>)</div>
+        <div class="tab" onclick="switchTab('add')">Pridať</div>
+      </div>
+
+      <div id="tab-friends" class="tab-content">
+        <div id="friends-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+
+      <div id="tab-requests" class="tab-content" style="display: none;">
+        <div id="requests-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+
+      <div id="tab-add" class="tab-content" style="display: none;">
+        <p style="color: #8e9cae; font-size: 0.9rem;">Zadajte meno priateľa:</p>
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <input id="search-user" style="flex: 1; padding: 12px; background: #202736; border: 1px solid #2f3b52; border-radius: 8px; color: white;" placeholder="napr. Marek" />
+          <button class="btn-action btn-accept" onclick="sendFriendRequest()">Odoslať</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. SÚKROMNÝ CHAT -->
+    <div id="chat-screen">
+      <div class="chat-header">
+        <button onclick="closeChat()">⬅</button>
+        <div>
+          <div id="chat-partner-name" style="font-weight: bold;">Meno</div>
+          <div style="font-size: 0.75rem; color: #00ffa3;">🔒 Súkromný šifrovaný chat</div>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chat-messages"></div>
+
+      <form class="chat-form" onsubmit="sendPrivateMessage(event)">
+        <input id="chat-input" placeholder="Napíšte správu..." autocomplete="off" />
+        <button type="submit">Odoslať</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io();
+    var myUsername = "";
+    var activeChatPartner = "";
+
+    function showStatus(text, isError) {
+      var el = document.getElementById('status-msg');
+      el.style.color = isError ? '#ff4757' : '#00ffa3';
+      el.innerText = text;
+    }
+
+    function handleAuth(type) {
+      var user = document.getElementById('auth-user').value.trim();
+      var pass = document.getElementById('auth-pass').value.trim();
+      if (!user || !pass) return showStatus("Vyplňte meno aj heslo!", true);
+      showStatus("Spracovávam...", false);
+      socket.emit(type, { username: user, password: pass });
+    }
+
+    socket.on('auth_error', function(msg) { showStatus(msg, true); });
+    socket.on('auth_success', function(data) { showStatus(data.message, false); });
+
+    socket.on('login_success', function(data) {
+      myUsername = data.username;
+      document.getElementById('current-user-display').innerText = myUsername;
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('main-screen').style.display = 'flex';
+    });
+
+    socket.on('alert', function(msg) { alert(msg); });
+
+    socket.on('user_data', function(data) {
+      var flist = document.getElementById('friends-list');
+      flist.innerHTML = "";
+      if (data.friends.length === 0) {
+        flist.innerHTML = "<p style='color: #8e9cae; text-align: center; margin-top: 20px;'>Zatiaľ žiadni priatelia.<br>Pridajte si ich v záložke Pridať.</p>";
+      } else {
+        data.friends.forEach(function(friend) {
+          var item = document.createElement('div');
+          item.className = 'list-item';
+          item.innerHTML = '<span>💬 <b>' + friend + '</b></span><span style="color:#00ffa3; font-size:0.85rem;">Písať ➡</span>';
+          item.onclick = function() { openChat(friend); };
+          flist.appendChild(item);
+        });
+      }
+
+      document.getElementById('req-count').innerText = data.requests.length;
+      var rlist = document.getElementById('requests-list');
+      rlist.innerHTML = "";
+      if (data.requests.length === 0) {
+        rlist.innerHTML = "<p style='color: #8e9cae; text-align: center; margin-top: 20px;'>Žiadne nové žiadosti.</p>";
+      } else {
+        data.requests.forEach(function(reqUser) {
+          var rItem = document.createElement('div');
+          rItem.className = 'list-item';
+          rItem.innerHTML = '<span>👤 <b>' + reqUser + '</b></span><div>' +
+            '<button class="btn-action btn-accept" onclick="acceptReq(\'' + reqUser + '\')">Prijať</button>' +
+            '<button class="btn-action btn-reject" onclick="rejectReq(\'' + reqUser + '\')">Odmietnuť</button>' +
+            '</div>';
+          rlist.appendChild(rItem);
+        });
+      }
+    });
+
+    socket.on('update_data', function() { socket.emit('request_update'); });
+
+    function sendFriendRequest() {
+      var input = document.getElementById('search-user');
+      if (input.value.trim()) {
+        socket.emit('send_request', input.value.trim());
+        input.value = "";
+      }
+    }
+
+    function acceptReq(fromUser) { socket.emit('accept_request', fromUser); }
+    function rejectReq(fromUser) { socket.emit('reject_request', fromUser); }
+
+    function openChat(partner) {
+      activeChatPartner = partner;
+      document.getElementById('chat-partner-name').innerText = partner;
+      document.getElementById('main-screen').style.display = 'none';
+      document.getElementById('chat-screen').style.display = 'flex';
+      document.getElementById('chat-messages').innerHTML = "";
+      socket.emit('load_messages', partner);
+    }
+
+    function closeChat() {
+      activeChatPartner = "";
+      document.getElementById('chat-screen').style.display = 'none';
+      document.getElementById('main-screen').style.display = 'flex';
+      socket.emit('request_update');
+    }
+
+    function sendPrivateMessage(e) {
+      e.preventDefault();
+      var input = document.getElementById('chat-input');
+      if (input.value.trim() && activeChatPartner) {
+        socket.emit('send_private_message', { to: activeChatPartner, text: input.value.trim() });
+        input.value = "";
+      }
+    }
+
+    socket.on('chat_history', function(data) {
+      if (data.withUser === activeChatPartner) {
+        var box = document.getElementById('chat-messages');
+        box.innerHTML = "";
+        data.messages.forEach(appendMessage);
+      }
+    });
+
+    socket.on('new_message', function(msg) {
+      if (activeChatPartner && (msg.from === activeChatPartner || (msg.from === myUsername && msg.to === activeChatPartner))) {
+        appendMessage(msg);
+      }
+    });
+
+    function appendMessage(msg) {
+      var box = document.getElementById('chat-messages');
+      var item = document.createElement('div');
+      var isMine = msg.from === myUsername;
+      item.className = 'msg-bubble ' + (isMine ? 'mine' : 'theirs');
+      item.innerHTML = '<div>' + msg.text + '</div><div class="msg-time">' + msg.time + '</div>';
+      box.appendChild(item);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function switchTab(name) {
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+      document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
+      
+      if (name === 'friends') {
+        document.querySelectorAll('.tab')[0].classList.add('active');
+        document.getElementById('tab-friends').style.display = 'flex';
+      } else if (name === 'requests') {
+        document.querySelectorAll('.tab')[1].classList.add('active');
+        document.getElementById('tab-requests').style.display = 'flex';
+      } else if (name === 'add') {
+        document.querySelectorAll('.tab')[2].classList.add('active');
+        document.getElementById('tab-add').style.display = 'flex';
+      }
+    }
+
+    function logout() { location.reload(); }
+  </script>
+</body>
+</html>
