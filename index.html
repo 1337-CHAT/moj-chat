@@ -7,49 +7,31 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     html, body { width: 100%; height: 100%; background: #0b0e14; color: #e1e7ec; overflow-x: hidden; }
-    
     #app { width: 100%; min-height: 100vh; max-width: 480px; margin: 0 auto; background: #151921; display: flex; flex-direction: column; }
-    
-    /* Hlavička */
     .header { background: #1c222d; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #273142; }
     .header h1 { font-size: 1.2rem; color: #00ffa3; font-weight: 800; letter-spacing: 2px; }
     .header .btn-small { background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
-
-    /* Uvítacia Obrazovka */
     #auth-screen { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 20px; gap: 15px; }
-    
-    .greeting-card {
-      background: #1c222d; border: 1px solid #273142; border-radius: 12px; padding: 22px 15px; text-align: center;
-      box-shadow: 0 4px 20px rgba(0, 255, 163, 0.08);
-    }
+    .greeting-card { background: #1c222d; border: 1px solid #273142; border-radius: 12px; padding: 22px 15px; text-align: center; box-shadow: 0 4px 20px rgba(0, 255, 163, 0.08); }
     .greet-q { font-size: 1.15rem; color: #8e9cae; margin-bottom: 6px; font-style: italic; }
     .greet-a { font-size: 1.4rem; color: #ffffff; font-weight: bold; margin-bottom: 8px; }
     .greet-sign { font-size: 1.1rem; color: #00ffa3; font-weight: 600; margin-bottom: 15px; }
-    .leet-logo {
-      font-family: monospace; font-size: 1.8rem; font-weight: 900; letter-spacing: 14px; color: #00ffa3;
-      text-shadow: 0 0 15px rgba(0, 255, 163, 0.6); margin-top: 5px;
-    }
-
+    .leet-logo { font-family: monospace; font-size: 1.8rem; font-weight: 900; letter-spacing: 14px; color: #00ffa3; text-shadow: 0 0 15px rgba(0, 255, 163, 0.6); margin-top: 5px; }
     .auth-box { display: flex; flex-direction: column; gap: 12px; margin-top: 5px; }
     .auth-box input { padding: 14px; background: #202736; border: 1px solid #2f3b52; border-radius: 8px; color: white; font-size: 1rem; outline: none; }
     .auth-box button { padding: 14px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; }
     .btn-green { background: #00ffa3; color: #0b0e14; }
     .btn-secondary { background: #273142; color: #e1e7ec; }
     #status-msg { text-align: center; font-size: 0.95rem; min-height: 22px; font-weight: bold; }
-
-    /* Hlavná obrazovka */
     #main-screen { flex: 1; display: none; flex-direction: column; height: 100vh; }
     .tabs { display: flex; background: #1c222d; border-bottom: 1px solid #273142; }
     .tab { flex: 1; text-align: center; padding: 14px 5px; cursor: pointer; font-size: 0.9rem; color: #8e9cae; border-bottom: 2px solid transparent; }
     .tab.active { color: #00ffa3; border-color: #00ffa3; font-weight: bold; }
-
     .tab-content { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
     .list-item { background: #1c222d; padding: 14px 16px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .btn-action { padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
     .btn-accept { background: #00ffa3; color: #0b0e14; margin-right: 5px; }
     .btn-reject { background: #ff4757; color: white; }
-
-    /* Súkromný Chat */
     #chat-screen { flex: 1; display: none; flex-direction: column; height: 100vh; }
     .chat-header { background: #1c222d; padding: 14px 16px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #273142; }
     .chat-header button { background: none; border: none; color: #00ffa3; font-size: 1.4rem; cursor: pointer; padding: 5px; }
@@ -58,7 +40,6 @@
     .msg-bubble.mine { align-self: flex-end; background: #00ffa3; color: #0b0e14; border-bottom-right-radius: 2px; }
     .msg-bubble.theirs { align-self: flex-start; background: #242c3b; color: white; border-bottom-left-radius: 2px; }
     .msg-time { font-size: 0.7rem; opacity: 0.7; margin-top: 3px; text-align: right; }
-    
     .chat-form { display: flex; padding: 12px; background: #1c222d; gap: 8px; }
     .chat-form input { flex: 1; padding: 12px; background: #242c3b; border: 1px solid #2f3b52; border-radius: 8px; color: white; outline: none; }
     .chat-form button { padding: 0 18px; background: #00ffa3; border: none; border-radius: 8px; font-weight: bold; color: #0b0e14; cursor: pointer; }
@@ -67,7 +48,6 @@
 <body>
 
   <div id="app">
-    <!-- 1. OBRAZOVKA: UVÍTANIE & PRIHLÁSENIE -->
     <div id="auth-screen">
       <div class="greeting-card">
         <div class="greet-q">Tu som správne?</div>
@@ -78,19 +58,18 @@
       
       <div class="auth-box">
         <div id="status-msg"></div>
-        <input id="auth-user" placeholder="Používateľské meno" value="Juraj" />
-        <input id="auth-pass" type="password" placeholder="Heslo" value="1234" />
+        <input id="auth-user" placeholder="Používateľské meno" />
+        <input id="auth-pass" type="password" placeholder="Heslo" />
         <button class="btn-green" onclick="handleAuth('login')">Prihlásiť sa</button>
         <button class="btn-secondary" onclick="handleAuth('register')">Vytvoriť nový účet</button>
       </div>
     </div>
 
-    <!-- 2. HLAVNÁ OBRAZOVKA -->
     <div id="main-screen">
       <div class="header">
         <h1>⚡ 1337</h1>
         <div>
-          <span id="current-user-display" style="font-weight: bold; margin-right: 8px;">Juraj</span>
+          <span id="current-user-display" style="font-weight: bold; margin-right: 8px;"></span>
           <button class="btn-small" onclick="logout()">Odhlásiť</button>
         </div>
       </div>
@@ -118,7 +97,6 @@
       </div>
     </div>
 
-    <!-- 3. SÚKROMNÝ CHAT -->
     <div id="chat-screen">
       <div class="chat-header">
         <button onclick="closeChat()">⬅</button>
@@ -143,7 +121,6 @@
     var myUsername = "";
     var activeChatPartner = "";
 
-    // Zvukový signál Messenger cinknutia
     function playMessengerChime() {
       try {
         var AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -162,20 +139,14 @@
       } catch (e) {}
     }
 
-    // Povolenie notifikácií
     function requestNotificationPermission() {
       if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
         Notification.requestPermission();
       }
     }
 
-    // Vyskakovacia notifikácia (aj keď je aplikácia minimalizovaná)
     function showSystemNotification(sender, text) {
-      // Zavibruje mobil (ak to podporuje)
-      if (navigator.vibrate) {
-        navigator.vibrate([150, 100, 150]);
-      }
-
+      if (navigator.vibrate) navigator.vibrate([150, 100, 150]);
       if ("Notification" in window && Notification.permission === "granted") {
         var notif = new Notification("⚡ 1337: " + sender, {
           body: text,
@@ -200,36 +171,38 @@
       var pass = document.getElementById('auth-pass').value.trim();
       if (!user || !pass) return showStatus("Vyplňte meno aj heslo!", true);
       showStatus("Spracovávam...", false);
+
+      // Zapamätáme si zadané heslo priamo do pamäte telefónu
+      localStorage.setItem('1337_session', JSON.stringify({ username: user, password: pass }));
       socket.emit(type, { username: user, password: pass });
     }
 
-    socket.on('auth_error', function(msg) { showStatus(msg, true); });
-    socket.on('auth_success', function(data) { showStatus(data.message, false); });
+    socket.on('auth_error', function(msg) {
+      showStatus(msg, true);
+    });
 
-    // Úspešné prihlásenie -> Uložíme do pamäte telefónu (localStorage)
+    // Úspešné prihlásenie -> Prepneme obrazovku
     socket.on('login_success', function(data) {
       myUsername = data.username;
-      var pass = document.getElementById('auth-pass').value.trim();
-      if (pass) {
-        localStorage.setItem('1337_session', JSON.stringify({ username: myUsername, password: pass }));
-      }
       document.getElementById('current-user-display').innerText = myUsername;
       document.getElementById('auth-screen').style.display = 'none';
       document.getElementById('main-screen').style.display = 'flex';
       requestNotificationPermission();
     });
 
-    // Automatické prihlásenie pri každom zapnutí aplikácie
+    // AUTOMATICKÉ PRIHLÁSENIE PO OTVORENÍ APLIKÁCIE
     socket.on('connect', function() {
       var saved = localStorage.getItem('1337_session');
       if (saved) {
         try {
           var creds = JSON.parse(saved);
           if (creds.username && creds.password) {
+            document.getElementById('auth-user').value = creds.username;
+            document.getElementById('auth-pass').value = creds.password;
             showStatus("Automatické prihlasovanie (" + creds.username + ")...", false);
             socket.emit('login', { username: creds.username, password: creds.password });
           }
-        } catch (e) {}
+        } catch(e) {}
       }
     });
 
@@ -317,8 +290,8 @@
 
     socket.on('new_message', function(msg) {
       if (msg.from !== myUsername) {
-        playMessengerChime(); // Zvuk
-        showSystemNotification(msg.from, msg.text); // Notifikácia + vibrácia
+        playMessengerChime();
+        showSystemNotification(msg.from, msg.text);
         document.title = "🔔 Nová správa! - 1337";
       }
 
@@ -353,7 +326,6 @@
       }
     }
 
-    // Odhlásenie: Zmaže pamäť a odhlási používateľa
     function logout() { 
       localStorage.removeItem('1337_session');
       location.reload(); 
