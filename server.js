@@ -24,51 +24,84 @@ function loadDB() {
 }
 
 function saveDB(data) {
-  fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+  } catch(e) {}
 }
 
-// Zverejníme hlavný priečinok aj priečinok public
 app.use(express.static(__dirname));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', (req, res) => {
-  const file1 = path.join(__dirname, 'index.html');
-  const file2 = path.join(__dirname, 'public', 'index.html');
-  if (fs.existsSync(file1)) return res.sendFile(file1);
-  if (fs.existsSync(file2)) return res.sendFile(file2);
+  const f1 = path.join(__dirname, 'index.html');
+  const f2 = path.join(__dirname, 'public', 'index.html');
+  if (fs.existsSync(f1)) return res.sendFile(f1);
+  if (fs.existsSync(f2)) return res.sendFile(f2);
   res.send("Hľadá sa index.html...");
 });
 
 io.on('connection', (socket) => {
   let currentUser = null;
 
+  // 1. REGISTRÁCIA (Rovno prihlási používateľa)
   socket.on('register', ({ username, password }) => {
     const db = loadDB();
     const cleanUser = (username || '').trim();
     if (!cleanUser || !password) {
       return socket.emit('auth_error', 'Vyplňte meno aj heslo!');
     }
-    if (db.users.find(u => u.username.toLowerCase() === cleanUser.toLowerCase())) {
-      return socket.emit('auth_error', 'Používateľ s týmto menom už existuje!');
+
+    const existing = db.users.find(u => u.username.toLowerCase() === cleanUser.toLowerCase());
+    if (existing) {
+      // Ak používateľ existuje a heslo sedí, rovno ho prihlásime
+      if (existing.password === password) {
+        currentUser = existing.username;
+        socket.join(currentUser);
+        socket.emit('login_success', { username: currentUser });
+        return sendUserData(socket, currentUser);
+      } else {
+        return socket.emit('auth_error', 'Meno ' + cleanUser + ' už existuje, zadajte správne heslo!');
+      }
     }
+
+    // Nový účet
     db.users.push({ username: cleanUser, password: password });
     saveDB(db);
-    socket.emit('auth_success', { username: cleanUser, message: 'Účet vytvorený! Teraz kliknite Prihlásiť sa.' });
-  });
-
-  socket.on('login', ({ username, password }) => {
-    const db = loadDB();
-    const cleanUser = (username || '').trim();
-    const user = db.users.find(u => u.username.toLowerCase() === cleanUser.toLowerCase() && u.password === password);
-    if (!user) {
-      return socket.emit('auth_error', 'Nesprávne meno alebo heslo!');
-    }
-    currentUser = user.username;
+    currentUser = cleanUser;
     socket.join(currentUser);
     socket.emit('login_success', { username: currentUser });
     sendUserData(socket, currentUser);
   });
 
+  // 2. PRIHLÁSENIE (Ak server zaspal a zabudol účet, automaticky ho obnoví)
+  socket.on('login', ({ username, password }) => {
+    const db = loadDB();
+    const cleanUser = (username || '').trim();
+    if (!cleanUser || !password) return socket.emit('auth_error', 'Vyplňte údaje!');
+
+    const existing = db.users.find(u => u.username.toLowerCase() === cleanUser.toLowerCase());
+
+    if (!existing) {
+      // Server sa po reštarte Renderu obnovil -> automaticky obnovíme účet
+      db.users.push({ username: cleanUser, password: password });
+      saveDB(db);
+      currentUser = cleanUser;
+      socket.join(currentUser);
+      socket.emit('login_success', { username: currentUser });
+      return sendUserData(socket, currentUser);
+    }
+
+    if (existing.password !== password) {
+      return socket.emit('auth_error', 'Nesprávne heslo pre ' + cleanUser + '!');
+    }
+
+    currentUser = existing.username;
+    socket.join(currentUser);
+    socket.emit('login_success', { username: currentUser });
+    sendUserData(socket, currentUser);
+  });
+
+  // 3. ŽIADOSTI
   socket.on('send_request', (targetUser) => {
     if (!currentUser) return;
     const db = loadDB();
@@ -83,7 +116,6 @@ io.on('connection', (socket) => {
     }
 
     const actualTargetName = exists.username;
-
     const isFriend = db.friends.some(f => 
       (f.u1 === currentUser && f.u2 === actualTargetName) || 
       (f.u2 === currentUser && f.u1 === actualTargetName)
@@ -110,7 +142,6 @@ io.on('connection', (socket) => {
     db.requests = db.requests.filter(r => !(r.from === fromUser && r.to === currentUser));
     db.friends.push({ u1: currentUser, u2: fromUser });
     saveDB(db);
-
     sendUserData(socket, currentUser);
     io.to(fromUser).emit('update_data');
   });
@@ -123,6 +154,7 @@ io.on('connection', (socket) => {
     sendUserData(socket, currentUser);
   });
 
+  // 4. SPRÁVY
   socket.on('send_private_message', ({ to, text }) => {
     if (!currentUser || !text.trim()) return;
     const db = loadDB();
